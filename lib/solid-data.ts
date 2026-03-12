@@ -12,6 +12,11 @@ export interface Principle {
   color: string;
   text: string;
   description?: string;
+  concept?: {
+    title: string;
+    description: string;
+    highlights?: string[];
+  };
 }
 
 export interface Cascade {
@@ -29,35 +34,60 @@ export const PRINCIPLES: Record<PrincipleKey, Principle> = {
     full: 'Single Responsibility',
     color: 'bg-blue-500',
     text: 'text-blue-500',
-    description: 'A class should have only one reason to change'
+    description: 'A class should have only one reason to change',
+    concept: {
+      title: 'Actor-Centric Design',
+      description: 'A class or module should be dedicated to a single stakeholder or actor, ensuring it has only one reason to change.'
+    }
   },
   O: {
     title: 'OCP',
     full: 'Open/Closed',
     color: 'bg-emerald-500',
     text: 'text-emerald-500',
-    description: 'Open for extension, closed for modification'
+    description: 'Open for extension, closed for modification',
+    concept: {
+      title: 'Strategic Closure',
+      description: 'Since no program can be fully closed to all changes, designers should strategically apply the Open-Closed Principle by closing modules against the most likely changes based on experience and context.'
+    }
   },
   L: {
     title: 'LSP',
     full: 'Liskov Substitution',
     color: 'bg-purple-500',
     text: 'text-purple-500',
-    description: 'Subtypes must be substitutable for their base types'
+    description: 'Subtypes must be substitutable for their base types',
+    concept: {
+      title: 'The 3 Rules of Substitutability',
+      description: 'To safely substitute a base class with its derived class, three strict rules must be followed:',
+      highlights: [
+        'Signature Rule: Subtypes must maintain compatible method signatures (contravariant arguments, covariant returns, and matching exceptions).',
+        'Properties Rule: Subtypes must preserve class invariants and history constraints (no mutating state the base class promised to keep immutable).',
+        'Methods Rule: Subtypes cannot strengthen preconditions or weaken postconditions of the parent.'
+      ]
+    }
   },
   I: {
     title: 'ISP',
     full: 'Interface Segregation',
     color: 'bg-orange-500',
     text: 'text-orange-500',
-    description: 'Clients should not depend on interfaces they don\'t use'
+    description: 'Clients should not depend on interfaces they don\'t use',
+    concept: {
+      title: 'Interesting Fact: The Compilation Tax',
+      description: 'Beyond confusing developers, the "Fat Interface" problem has hidden costs. In compiled languages like C++ or Java, depending on a bloated interface forces unnecessary and costly recompilation of all dependent clients, even when unrelated methods are modified.'
+    }
   },
   D: {
     title: 'DIP',
     full: 'Dependency Inversion',
     color: 'bg-rose-500',
     text: 'text-rose-500',
-    description: 'Depend on abstractions, not concretions'
+    description: 'Depend on abstractions, not concretions',
+    concept: {
+      title: 'DIP vs. Inversion of Control (IoC)',
+      description: 'DIP dictates that high-level modules depend on abstractions, not low-level concretions. Inversion of Control is the broader mechanism that flips the execution flow, handing over control of dependency creation to a framework.'
+    }
   }
 };
 
@@ -68,15 +98,28 @@ export const CASCADES: Cascade[] = [
     to: 'L',
     label: 'The Fat Interface Trap',
     description: 'Fat interfaces force clients to implement methods they don\'t need. These "empty" or "throwing" implementations break the substitution contract.',
-    code: `// VIOLATION
-public interface IWorker { 
-  void Work(); 
-  void Eat(); 
+    code: `// --- PROBLEM: "Fat" Interface ---
+public interface IMachine {
+    void Print();
+    void Scan();
 }
 
-public class Robot : IWorker {
-  public void Work() => DoWork();
-  public void Eat() => throw new NotSupportedException(); // LSP BROKEN!
+public class BasicPrinter : IMachine {
+    public void Print() => Console.WriteLine("Printing...");
+    public void Scan() => throw new NotImplementedException();
+}
+
+// --- SOLUTION: Interface Segregation (ISP) ---
+public interface IPrinter { void Print(); }
+public interface IScanner { void Scan(); }
+
+public class SimplePrinter : IPrinter {
+    public void Print() => Console.WriteLine("Printing only.");
+}
+
+public class SmartDevice : IPrinter, IScanner {
+    public void Print() => Console.WriteLine("Printing...");
+    public void Scan() => Console.WriteLine("Scanning...");
 }`
   },
   {
@@ -85,11 +128,33 @@ public class Robot : IWorker {
     to: 'D',
     label: 'The Type-Checking Rot',
     description: 'When a subtype breaks behavior (LSP), the caller can no longer trust the abstraction. This forces the caller to check for specific types, effectively depending on concretions.',
-    code: `// VIOLATION
-public void Process(IWorker w) {
-  if (w is Robot) { /* specialized logic */ } // DIP BROKEN! 
-  else w.Eat();
-}`
+    code: `// --- PROBLEM: LSP Violation ---
+public class Bird {
+    public virtual void Fly() => Console.WriteLine("Flying...");
+}
+
+public class Ostrich : Bird {
+    public override void Fly() => throw new InvalidOperationException();
+}
+
+// THE ROT: Type-Checking (Caller cannot trust the abstraction)
+public void MakeBirdsFly(Bird bird) {
+    if (bird is not Ostrich) {
+        bird.Fly();
+    }
+}
+
+// --- SOLUTION: Segregate by Behavior ---
+public interface IBird { }
+public interface IFlyingBird : IBird { void Fly(); }
+
+public class Eagle : IFlyingBird {
+    public void Fly() => Console.WriteLine("Soaring...");
+}
+
+public class Ostrich : IBird { }
+
+public void ExecuteFlight(IFlyingBird bird) => bird.Fly();`
   },
   {
     id: 'lsp-ocp',
@@ -97,10 +162,36 @@ public void Process(IWorker w) {
     to: 'O',
     label: 'Modification via Subtyping',
     description: 'If every new subtype requires an "if-else" check in the main logic, the system is no longer closed to modification.',
-    code: `// VIOLATION
-public double Calc(Shape s) {
-  if (s is Square) return ...;
-  if (s is Circle) return ...; // OCP BROKEN: Must modify for every new shape
+    code: `// --- PROBLEM: LSP Violation leading to an OCP Violation ---
+public class Bird {
+    public virtual void Fly() => Console.WriteLine("Flying...");
+}
+
+public class Ostrich : Bird {
+    public override void Fly() => throw new InvalidOperationException();
+}
+
+public class BirdService {
+    public void MakeBirdFly(Bird bird) {
+        // ROT: Code is no longer Closed to Modification
+        if (bird is not Ostrich) { 
+            bird.Fly();
+        }
+    }
+}
+
+// --- SOLUTION: Interface Segregation ---
+public interface IBird { }
+public interface IFlyingBird : IBird { void Fly(); }
+
+public class Eagle : IFlyingBird {
+    public void Fly() => Console.WriteLine("Soaring...");
+}
+
+public class Ostrich : IBird { }
+
+public class FixedBirdService {
+    public void MakeBirdFly(IFlyingBird bird) => bird.Fly(); 
 }`
   },
   {
@@ -109,11 +200,32 @@ public double Calc(Shape s) {
     to: 'O',
     label: 'The Single Change Nexus',
     description: 'A class with multiple responsibilities is a magnet for change. You cannot add behavior (Extend) without risking side effects in unrelated logic (Modify).',
-    code: `// VIOLATION
-public class Report {
-  public void Generate() { ... }
-  public void SaveToDatabase() { ... } 
-  // SRP violation makes OCP extension risky
+    code: `// --- PROBLEM: Multiple Responsibilities ---
+public class ReportProcessor {
+    public void CreateReport() {
+        Console.WriteLine("Calculating data..."); // Responsibility 1
+        Console.WriteLine("Exporting as PDF..."); // Responsibility 2
+    }
+}
+
+// --- SOLUTION: Strategic Abstraction (SRP + OCP) ---
+public interface IReportExporter { void Export(); }
+
+public class PdfExporter : IReportExporter { 
+    public void Export() => Console.WriteLine("PDF Export"); 
+}
+public class ExcelExporter : IReportExporter { 
+    public void Export() => Console.WriteLine("Excel Export"); 
+}
+
+public class FixedReportProcessor {
+    private readonly IReportExporter _exporter;
+    public FixedReportProcessor(IReportExporter exporter) => _exporter = exporter;
+
+    public void CreateReport() {
+        Console.WriteLine("Calculating data...");
+        _exporter.Export(); // Closed to modification
+    }
 }`
   },
   {
@@ -122,9 +234,24 @@ public class Report {
     to: 'D',
     label: 'Coupling Reveal',
     description: 'If you find you cannot extend behavior without changing code, it reveals that your "abstraction" was actually tightly coupled to a specific implementation detail.',
-    code: `// REVEAL
-// If changing the DB requires changing the Service class, 
-// the Service was never truly depending on an abstraction.`
+    code: `// --- PROBLEM: Leaky Abstraction ---
+public interface INotification {
+    void Send(string smtpServer, string msg); // Coupled to SMTP
+}
+
+// --- SOLUTION: True Abstraction (OCP + DIP) ---
+public interface INotifier { void Send(string msg); }
+
+public class EmailProvider : INotifier {
+    public void Send(string msg) => Console.WriteLine($"SMTP: {msg}");
+}
+public class SmsProvider : INotifier {
+    public void Send(string msg) => Console.WriteLine($"SMS: {msg}");
+}
+
+public class AlertSystem {
+    public void Notify(INotifier n) => n.Send("Critical Error");
+}`
   },
   {
     id: 'dip-ocp',
@@ -132,9 +259,22 @@ public class Report {
     to: 'O',
     label: 'The Structural Prerequisite',
     description: 'DIP is the engine for OCP. Without Dependency Injection/Abstractions, there is no way to swap behavior without editing the source code.',
-    code: `// DIP = OCP Enabler
-public class OrderService(IPaymentProcessor proc) {
-  // We can add "Crypto" without touching this class.
+    code: `// --- PROBLEM: Hard-coded dependency ---
+public class OrderService {
+    private SqlData _db = new SqlData(); // Stuck with SQL
+    public void Save() => _db.Save();
+}
+
+// --- SOLUTION: DIP as the Engine for OCP ---
+public interface IRepository { void Save(); }
+
+public class SqlRepo : IRepository { public void Save() => /*...*/; }
+public class MongoRepo : IRepository { public void Save() => /*...*/; }
+
+public class FixedOrderService {
+    private readonly IRepository _repo;
+    public FixedOrderService(IRepository repo) => _repo = repo;
+    public void Save() => _repo.Save();
 }`
   },
   {
@@ -143,13 +283,23 @@ public class OrderService(IPaymentProcessor proc) {
     to: 'D',
     label: 'The Hidden Concretion',
     description: 'A "God Interface" (ISP violation) acts exactly like a concrete class because it carries specific implementation assumptions that leak across layers.',
-    code: `// VIOLATION
-public interface IEverything { 
-  void Query(); 
-  void Log(); 
-  void Email(); 
+    code: `// --- PROBLEM: God Interface (Leaks details) ---
+public interface IDatabase {
+    void Save();
+    void Rollback(); // Forced SQL assumption
 }
-// Too specific to implementation, not domain needs.`
+
+// --- SOLUTION: Segregated Behaviors (ISP) ---
+public interface ISaveable { void Save(); }
+public interface ITransactional { void Rollback(); }
+
+public class NoSqlStore : ISaveable {
+    public void Save() => Console.WriteLine("Saved.");
+}
+
+public class BusinessLogic {
+    public void Execute(ISaveable store) => store.Save();
+}`
   },
   {
     id: 's-isp',
@@ -157,10 +307,23 @@ public interface IEverything {
     to: 'I',
     label: 'God Interface Cascade',
     description: 'A God Class (SRP violation) inevitably produces a God Interface (ISP violation). Clients inherit all the bloat of the class they depend on.',
-    code: `// SRP -> ISP
-public class Manager : IManager { 
-  // IManager has 50 methods because Manager does 50 things
-  // Every client of IManager is now bloated.
+    code: `// --- PROBLEM: God Interface Cascade (SRP + ISP) ---
+public interface IAllInOne {
+    void Process();
+    void Log();
+}
+
+public class SimpleLogger : IAllInOne {
+    public void Log() => Console.WriteLine("Logging...");
+    public void Process() => throw new NotImplementedException(); 
+}
+
+// --- SOLUTION: Single Responsibility Interfaces ---
+public interface IProcessor { void Process(); }
+public interface ILogger { void Log(); }
+
+public class CleanLogger : ILogger {
+    public void Log() => Console.WriteLine("Logging only.");
 }`
   },
   {
@@ -169,14 +332,23 @@ public class Manager : IManager {
     to: 'L',
     label: 'Contract Bloat',
     description: 'When a class does too much, its contract becomes too complex for any subclass to honor fully, leading to broken substitution.',
-    code: `// VIOLATION
-public class MultiTool { 
-  public virtual void Drill() { ... }
-  public virtual void Saw() { ... }
+    code: `// --- PROBLEM: Contract Bloat (SRP + LSP) ---
+public interface IWorker {
+    void Code();
+    void AssignTasks();
 }
-public class HandDrill : MultiTool { 
-  public override void Saw() => throw new Error(); 
-  // SRP bloat caused LSP fail
+
+public class DeveloperRobot : IWorker {
+    public void Code() => Console.WriteLine("Coding...");
+    public void AssignTasks() => throw new NotSupportedException(); 
+}
+
+// --- SOLUTION: Segregated Contracts ---
+public interface ICoder { void Code(); }
+public interface IManager { void AssignTasks(); }
+
+public class SoftwareRobot : ICoder {
+    public void Code() => Console.WriteLine("Coding efficiently.");
 }`
   }
 ];
