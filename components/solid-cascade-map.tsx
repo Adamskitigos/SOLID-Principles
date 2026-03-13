@@ -39,7 +39,7 @@ export function SOLIDCascadeMap() {
   return (
     <main className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
       {/* Graph Section */}
-      <div className="lg:col-span-5 flex flex-col items-center justify-center space-y-8 bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
+      <div className="lg:col-span-5 flex flex-col items-center justify-center space-y-8 bg-slate-800/50 p-8 rounded-2xl border border-slate-700 sticky top-8 self-start">
         <PrinciplesCircle activeNode={activeNode} onNodeClick={handleNodeClick} />
         <CascadesList
           cascades={CASCADES}

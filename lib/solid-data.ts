@@ -17,6 +17,10 @@ export interface Principle {
     description: string;
     highlights?: string[];
   };
+  diagnosticQuestions?: string[];
+  lspTable?: {
+    rules: { name: string; description: string }[];
+  };
 }
 
 export interface Cascade {
@@ -38,7 +42,13 @@ export const PRINCIPLES: Record<PrincipleKey, Principle> = {
     concept: {
       title: 'Actor-Centric Design',
       description: 'A class or module should be dedicated to a single stakeholder or actor, ensuring it has only one reason to change.'
-    }
+    },
+    diagnosticQuestions: [
+      'Who are the stakeholders that could request a change to this class?',
+      'If two methods changed independently, could they conflict?',
+      'Can you name the responsibility in a single noun phrase without using "and"?',
+      'Does this class have more than one reason to be instantiated by different callers?'
+    ]
   },
   O: {
     title: 'OCP',
@@ -49,7 +59,13 @@ export const PRINCIPLES: Record<PrincipleKey, Principle> = {
     concept: {
       title: 'Strategic Closure',
       description: 'Since no program can be fully closed to all changes, designers should strategically apply the Open-Closed Principle by closing modules against the most likely changes based on experience and context.'
-    }
+    },
+    diagnosticQuestions: [
+      'Does adding a new variant require editing existing, working code?',
+      'Are there if/else or switch chains that grow every sprint?',
+      'Can a new team member extend behavior without understanding the core?',
+      'Would adding a new feature here break existing tests?'
+    ]
   },
   L: {
     title: 'LSP',
@@ -65,6 +81,21 @@ export const PRINCIPLES: Record<PrincipleKey, Principle> = {
         'Properties Rule: Subtypes must preserve class invariants and history constraints (no mutating state the base class promised to keep immutable).',
         'Methods Rule: Subtypes cannot strengthen preconditions or weaken postconditions of the parent.'
       ]
+    },
+    diagnosticQuestions: [
+      'Can every subtype be passed where the base type is expected without callers noticing?',
+      'Does any subtype throw exceptions the base type never declared?',
+      'Does any override ignore or stub out a parent method with // not supported?',
+      'Do any subtypes strengthen preconditions — demanding more from callers than the parent did?',
+      'Does the IS-A relationship hold behaviorally, not just conceptually?'
+    ],
+    lspTable: {
+      rules: [
+        { name: 'Preconditions', description: 'A subclass cannot require stricter conditions than the parent. It must accept at least everything the parent accepts, or even more.' },
+        { name: 'Postconditions', description: 'A subclass must guarantee results that are at least as strong as the parents promises. It can return better or more specific results, but never worse.' },
+        { name: 'Invariants', description: 'All core rules or state constraints defined by the parent must always remain true in the subtype.' },
+        { name: 'Exceptions', description: 'A subclass cannot introduce new unexpected exception types beyond what the parent specifies.' }
+      ]
     }
   },
   I: {
@@ -76,7 +107,13 @@ export const PRINCIPLES: Record<PrincipleKey, Principle> = {
     concept: {
       title: 'Interesting Fact: The Compilation Tax',
       description: 'Beyond confusing developers, the "Fat Interface" problem has hidden costs. In compiled languages like C++ or Java, depending on a bloated interface forces unnecessary and costly recompilation of all dependent clients, even when unrelated methods are modified.'
-    }
+    },
+    diagnosticQuestions: [
+      'Does any class implement an interface method with throw new NotSupportedException()?',
+      'Do clients import an interface but only ever call one or two of its methods?',
+      'Does a change to a method break classes that never call that method?',
+      'Are interface names vague like IManager, IService, IHelper?'
+    ]
   },
   D: {
     title: 'DIP',
@@ -87,7 +124,14 @@ export const PRINCIPLES: Record<PrincipleKey, Principle> = {
     concept: {
       title: 'DIP vs. Inversion of Control (IoC)',
       description: 'DIP dictates that high-level modules depend on abstractions, not low-level concretions. Inversion of Control is the broader mechanism that flips the execution flow, handing over control of dependency creation to a framework.'
-    }
+    },
+    diagnosticQuestions: [
+      'Does the high-level policy depend on low-level implementation details (e.g., specific database classes or external API clients)?',
+      'Can you unit test the core business logic without spinning up a database or making network calls?',
+      'Are dependencies injected via interfaces or constructors rather than being instantiated inside the class?',
+      'When a new external system is integrated, does it require modifying the core business rules?',
+      'Do the names of your interfaces describe the business need rather than the technical implementation?'
+    ]
   }
 };
 

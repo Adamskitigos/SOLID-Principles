@@ -1,6 +1,6 @@
 'use client';
 
-import { Code, Info, ShieldAlert, Zap } from 'lucide-react';
+import { Code, Info, ShieldAlert, Zap, HelpCircle, CheckCircle2 } from 'lucide-react';
 import { Cascade, PrincipleKey, PRINCIPLES } from '@/lib/solid-data';
 
 interface DetailPanelProps {
@@ -68,6 +68,56 @@ export function DetailPanel({
                   ))}
                 </ul>
               )}
+            </div>
+          )}
+
+          {/* New Diagnostic Questions Section */}
+          {principle.diagnosticQuestions && (
+            <div className="mt-6 p-6 bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-2xl border border-slate-700 shadow-xl backdrop-blur-md animate-in slide-in-from-bottom-3 fade-in duration-500 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="p-2 bg-indigo-500/20 rounded-lg border border-indigo-500/30 shadow-sm">
+                    <HelpCircle size={20} className="text-indigo-400 drop-shadow-md" />
+                  </div>
+                  <h4 className="text-xl font-bold text-slate-100 tracking-tight">Key Diagnostic Questions</h4>
+                </div>
+                <ul className="space-y-3">
+                  {principle.diagnosticQuestions.map((question, idx) => (
+                    <li key={idx} className="flex items-start gap-4 text-sm bg-slate-950/40 rounded-xl p-4 border border-slate-700/40 shadow-sm transition-all duration-300 hover:bg-slate-800 hover:-translate-y-0.5 hover:shadow-md hover:border-slate-600">
+                      <div className="mt-0.5 text-indigo-400/80 font-bold bg-indigo-950/50 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 border border-indigo-500/20 shadow-inner">
+                        {idx + 1}
+                      </div>
+                      <span className="leading-relaxed text-slate-300 font-medium">{question}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* New LSP Table Section */}
+          {principle.lspTable && (
+            <div className="mt-6 animate-in slide-in-from-bottom-4 fade-in duration-700 relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
+              <div className="relative overflow-hidden rounded-2xl border border-slate-700 shadow-2xl bg-slate-900/80 backdrop-blur-sm">
+                <div className="bg-slate-800/90 p-4 border-b border-slate-700/80 flex items-center justify-center gap-2">
+                  <CheckCircle2 size={16} className="text-purple-400" />
+                  <h4 className="uppercase tracking-[0.2em] text-xs font-bold text-slate-300">LSP Contract Rules</h4>
+                </div>
+                <div className="grid grid-cols-1">
+                  {principle.lspTable.rules.map((rule, idx) => (
+                    <div key={idx} className="group/row flex flex-col sm:flex-row border-b border-slate-700/50 last:border-0 transition-colors duration-300 hover:bg-slate-800/60">
+                      <div className="p-4 sm:w-1/3 bg-slate-800/30 font-semibold text-slate-200 border-r border-slate-700/30 flex items-center transition-colors group-hover/row:text-purple-300">
+                        {rule.name}
+                      </div>
+                      <div className="p-4 sm:w-2/3 text-slate-400 text-sm flex items-center leading-relaxed">
+                        {rule.description}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>
