@@ -92,7 +92,7 @@ export const PRINCIPLES: Record<PrincipleKey, Principle> = {
     lspTable: {
       rules: [
         { name: 'Preconditions', description: 'A subclass cannot require stricter conditions than the parent. It must accept at least everything the parent accepts, or even more.' },
-        { name: 'Postconditions', description: 'A subclass must guarantee results that are at least as strong as the parents promises. It can return better or more specific results, but never worse.' },
+        { name: 'Postconditions', description: 'A subclass must guarantee results that are at least as strong as the parent`s promises. It can return better or more specific results, but never worse.' },
         { name: 'Invariants', description: 'All core rules or state constraints defined by the parent must always remain true in the subtype.' },
         { name: 'Exceptions', description: 'A subclass cannot introduce new unexpected exception types beyond what the parent specifies.' }
       ]

@@ -22,10 +22,10 @@ export default function Home() {
 
       <footer className="max-w-6xl mx-auto mt-12 pt-6 border-t border-slate-800 text-center text-slate-500 text-sm italic">
         <p>
-          "Architecture is the art of understanding that a shortcut in one principle is a debt in three others."
+          "Here’s the simple truth: you can’t innovate on products without first innovating the way you build them."
         </p>
         <p className="mt-2 text-slate-600">
-          Built as a SOLID reference guide for developers and architects.
+          Built by Adam & Tarik
         </p>
       </footer>
     </div>
